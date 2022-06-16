@@ -1,2 +1,3 @@
-# Graphics-Test-3
-OpenGL ES Test for Android
+# Graphics Test 3
+
+> OpenGL ES Test for Android

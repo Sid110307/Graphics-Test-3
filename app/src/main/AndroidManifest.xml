@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools"
-	package="com.sid.graphicstest3">
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-feature
-		android:glEsVersion="0x00020000"
+		android:glEsVersion="0x00030000"
 		android:required="true" />
 
 	<application
@@ -15,7 +14,7 @@
 		android:roundIcon="@mipmap/ic_launcher_round"
 		android:supportsRtl="true"
 		android:theme="@style/Theme.GraphicsTest3"
-		tools:targetApi="32">
+		tools:targetApi="33">
 		<activity
 			android:name=".MainActivity"
 			android:exported="true">

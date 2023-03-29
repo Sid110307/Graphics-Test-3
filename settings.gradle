@@ -13,4 +13,4 @@ dependencyResolutionManagement {
 	}
 }
 rootProject.name = "Graphics Test 3"
-include ':app'
+include ":app"

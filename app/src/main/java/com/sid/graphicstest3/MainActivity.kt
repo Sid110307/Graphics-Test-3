@@ -1,89 +1,121 @@
 package com.sid.graphicstest3
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
+import javax.microedition.khronos.opengles.GL10
+import kotlin.math.sqrt
 
 class MainActivity : Activity() {
-	private lateinit var glView: GLSurfaceView
+	private lateinit var graphicsView: GraphicsView
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		glView = GraphicsGLView(this)
-		setContentView(glView)
+		graphicsView = GraphicsView(this)
+		graphicsView.setEGLContextClientVersion(3)
+		graphicsView.setRenderer(Renderer())
+		setContentView(graphicsView)
+	}
+
+	override fun onPause() {
+		super.onPause()
+		graphicsView.onPause()
+	}
+
+	override fun onResume() {
+		super.onResume()
+		graphicsView.onResume()
+	}
+
+	companion object {
+		val camera = Camera()
+		val scene = Scene()
 	}
 }
 
-class GraphicsGLView(context: Context) : GLSurfaceView(context) {
+class GraphicsView(context: Context) : GLSurfaceView(context) {
+	private var previousX = 0.0f
+	private var previousY = 0.0f
+
 	init {
-		setEGLContextClientVersion(2)
-		setRenderer(CustomRenderer())
+		setOnTouchListener { v, event ->
+			when (event.pointerCount) {
+				4 -> when (event.action) {
+					MotionEvent.ACTION_MOVE -> MainActivity.camera.reset()
+				}
 
-		renderMode = RENDERMODE_WHEN_DIRTY
-	}
+				3 -> when (event.action) {
+					MotionEvent.ACTION_MOVE -> {
+						val deltaX = event.getX(0) - event.getX(1)
+						val deltaY = event.getY(0) - event.getY(1)
+						val distance =
+							sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
+						val deltaDistance = distance - previousX
 
-	private var lastX = 0f
-	private var lastY = 0f
+						MainActivity.camera.zoom(deltaDistance)
+						MainActivity.camera.rotate(deltaX, deltaY)
+						previousX = distance
+					}
+				}
 
-	/*
-	One finger - pan
-	Two fingers - rotate
-	Three fingers - zoom
-	Four fingers - reset
-	*/
-	@SuppressLint("ClickableViewAccessibility")
-	override fun onTouchEvent(event: MotionEvent): Boolean {
-		val x = event.x
-		val y = event.y
+				2 -> when (event.action) {
+					MotionEvent.ACTION_MOVE -> {
+						val deltaX = event.getX(0) - event.getX(1)
+						val deltaY = event.getY(0) - event.getY(1)
+						val distance =
+							sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
+						val deltaDistance = distance - previousX
 
-		when (event.action) {
-			MotionEvent.ACTION_MOVE -> {
-				val fraction = 0.1f
-				Log.d("MainActivity", "x: $x, y: $y")
+						MainActivity.camera.zoom(deltaDistance)
+						previousX = distance
+					}
+				}
 
-				when (event.pointerCount) {
-					4 -> {
-						CustomRenderer.x = 0f
-						CustomRenderer.y = 2.5f
-						CustomRenderer.z = 15f
-
-						CustomRenderer.lx = 0f
-						CustomRenderer.ly = 0f
-						CustomRenderer.lz = -1f
-
-						CustomRenderer.angle = 0f
-						Log.d("MainActivity", "Reset")
+				1 -> when (event.action) {
+					MotionEvent.ACTION_DOWN -> {
+						previousX = event.x
+						previousY = event.y
 					}
 
-					3 -> {
-						CustomRenderer.lz += fraction * (y - lastY)
-						Log.d("MainActivity", "Zoom")
-					}
+					MotionEvent.ACTION_MOVE -> {
+						val deltaX = event.x - previousX
+						val deltaY = event.y - previousY
 
-					2 -> {
-						CustomRenderer.angle += fraction * (x - lastX)
-						Log.d("MainActivity", "Rotate")
-					}
-
-					1 -> {
-						CustomRenderer.x += CustomRenderer.lz * fraction * (x - lastX)
-						CustomRenderer.z += CustomRenderer.lx * fraction * (y - lastY)
-						Log.d("MainActivity", "Pan")
+						MainActivity.camera.pan(-deltaX, deltaY)
+						previousX = event.x
+						previousY = event.y
 					}
 				}
 			}
 
-			MotionEvent.ACTION_UP -> {
-				lastX = x
-				lastY = y
-			}
+			v.performClick()
+			true
 		}
-
-		return true
 	}
+}
+
+class Scene {
+	private val shapes = mutableListOf<Shape>()
+
+	init {
+		shapes.add(Cube(0.5f))
+		moveLast(0.0f, 0.0f, 1.0f)
+		shapes.add(Sphere(0.5f, 20, 20))
+		moveLast(0.0f, 0.0f, -1.0f)
+		shapes.add(Pyramid(0.5f))
+		moveLast(0.0f, 0.0f, 1.0f)
+		shapes.add(Cylinder(0.5f, 1.0f, 20))
+		moveLast(0.0f, 0.0f, -1.0f)
+		shapes.add(Cone(0.5f, 1.0f, 20))
+		moveLast(0.0f, 0.0f, 1.0f)
+	}
+
+	private fun moveLast(x: Float, y: Float, z: Float) = shapes.last().translate(x, y, z)
+	private fun rotateLast(x: Float, y: Float, z: Float) = shapes.last().rotate(x, y, z)
+	private fun scaleLast(x: Float, y: Float, z: Float) = shapes.last().scale(x, y, z)
+
+	fun draw(gl: GL10) = shapes.forEach { it.draw(gl) }
 }

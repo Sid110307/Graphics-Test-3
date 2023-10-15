@@ -5,9 +5,10 @@ import android.opengl.GLSurfaceView
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
+
 class Renderer : GLSurfaceView.Renderer {
 	override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-		GLES32.glClearColor(0.5f, 0.7f, 0.9f, 1.0f)
+		GLES32.glClearColor(0.55f, 0.75f, 1.0f, 1.0f)
 		GLES32.glEnable(GLES32.GL_DEPTH_TEST)
 		GLES32.glEnable(GLES32.GL_CULL_FACE)
 		GLES32.glCullFace(GLES32.GL_BACK)
